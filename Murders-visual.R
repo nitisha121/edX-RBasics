@@ -6,7 +6,7 @@ p <- murders %>% ggplot(aes(population/10^6, total, label = abb)) + geom_text(nu
   scale_y_log10() + xlab("Popln in mill (log scale)") + ylab("Total murders (log scale)") +
   ggtitle("US Gun murders in US 2010")
 
-p <- p + geom_point(aes(col=region), size = 3) #x and y mappings are inherited from when we defined p / aes 
+p <- p + geom_point(aes(col=region), size = 3) #x and y mappings are inherited from when we defined p (aes mapping)
 
 r <- murders %>% summarize(rate = sum(total) / sum(population) * 10^6) %>% .$rate
 
