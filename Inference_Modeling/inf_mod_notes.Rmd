@@ -1,0 +1,33 @@
+---
+title: "Inference & Modeling"
+author: "Nitisha Agarwal"
+date: "December 7, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Section 1: Parameters and Estimates
+
+Estimating spread of poll data: REplicate example by trying to guess spread of blue vs. red balls in an jar. 
+```{r}
+library(tidyverse)
+library(dslabs)
+ds_theme_set()
+take_poll(25)
+```
+
+
+## Section 2: Central Limit Theorem in Practice
+
+## Section 3: Confidence Intervals and p-values 
+
+## Section 4: Statistical Models 
+
+## Section 5:Bayesian Statistics
+
+## Section 6: Election Forecasting 
+
+## Section 7: Automation Tests 
