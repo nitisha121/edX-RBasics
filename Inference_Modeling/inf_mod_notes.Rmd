@@ -1,5 +1,5 @@
 ---
-title: "Inference & Modeling"
+title: "Inference & Modeling - edX Prof: Rafael Izarry"
 author: "Nitisha Agarwal"
 date: "December 7, 2018"
 output: html_document
@@ -17,10 +17,164 @@ library(tidyverse)
 library(dslabs)
 ds_theme_set()
 take_poll(25)
+
+# proportion of blue balls <- p
+# proportion of red <- 1 - p
+# estimate of spread <- 2p - 1
+
+```
+
+We can define a random var X for n balls in the jar and it's mean as $\bar{X} = \frac{1}{N}(X_1,...,X_n)$ where the values of a blue ball being 1, and a red one being 0. Also, $E(\bar{X})=p$.
+
+Then $SE(\bar{X})=\sqrt{p(1-p)/N}$ is the standard error of the average where p is unknown and N is known. We can make the standard error smaller by increasing the size of the sample, N. 
+
+```{r}
+
+# `N` represents the number of people polled
+N <- 25
+
+# Create a variable `p` that contains 100 proportions ranging from 0 to 1 using the `seq` function
+p <- seq(0, 1, length.out = 100)
+
+# Create a variable `se` that contains the standard error of each sample average
+se <- sqrt(p*(1-p)/N)
+
+# Plot `p` on the x-axis and `se` on the y-axis
+plot(p,se)
+
+# The vector `p` contains 100 proportions of Democrats ranging from 0 to 1 using the `seq` function
+p <- seq(0, 1, length = 100)
+
+# The vector `sample_sizes` contains the three sample sizes
+sample_sizes <- c(25, 100, 1000)
+
+# Write a for-loop that calculates the standard error `se` for every value of `p` for each of the three samples sizes `N` in the vector `sample_sizes`. Plot the three graphs, using the `ylim` argument to standardize the y-axis across all three plots.
+
+for (N in sample_sizes) {
+  se <- sqrt(p*(1-p)/N)
+  plot(p, se)
+}
+
+```
+
+Our estimate for the difference in proportions of Democrats and Republicans is $d=\bar{X}???(1???\bar{X})$:  
+$E[\bar{X} - (1 - \bar{X})] = E[2\bar{X} - 1] = 2E[\bar{X} - 1] = 2p - 1 = p - (1 - p)$  
+$SE[\bar{X} - (1 - \bar{X})] = SE[2\bar{X} - 1] = 2SE[\bar{X}] = 2\sqrt{p(1-p)/N}$
+
+
+Say the actual proportion of Democratic voters is p=0.45. In this case, the Republican party is winning by a relatively large margin of d=-0.1, or a 10% margin of victory. What is the standard error of the spread $2\bar{X}-1$ in this case?
+
+```{r}
+
+# `N` represents the number of people polled
+N <- 25
+
+# `p` represents the proportion of Democratic voters
+p <- 0.45
+
+# Calculate the standard error of the spread. Print this value to the console.
+
+se <- 2*sqrt(p*(1-p)/N)
+se
+
+```
+
+So far we have said that the difference between the proportion of Democratic voters and Republican voters is about 10% and that the standard error of this spread is about 0.2 when N=25. This sample size is too small because the standard error is larger than the spread.  
+
+  
+  
+## Section 2: Central Limit Theorem in Practice
+
+
+The CLT says that the distribution function for a sum of draws is approximately normal. $X \sim N(\mu, \sigma)$ which implies the distribution of $\bar{X}$ is also normal. 
+
+
+What's the probability that the difference between our estimate p and the true value $\bar{X}$ is a very, very good estimate? $Pr(|{\bar{X}-p}| \leq 0.01)$ is equivalent to $Pr(\bar{X} \leq p + 0.01) - Pr(\bar{X} \leq p - 0.01)$. 
+
+Subtract $E(\bar{X})$ from both sides then divide by $SE(\bar{X})$ to get a std normal and call it Z. 
+
+But the problem is that we don't know p but CLT still works if we use an estimate of the stderror $\bar{X}$ in place of p.  
+$\hat{SE}(\bar{X})=\sqrt{\bar{X}(1-\bar{X})/N}$
+
+```{r}
+X_hat <- 0.48 # calculated from example with 12 blue, 13 red balls 
+se <- sqrt(X_hat*(1-X_hat)/25)
+se # ~ 0.01, one percentage point away
+
+pnorm(0.01/se) - pnorm(-0.01/se) 
+# about 8%, means there's a v small chance we'll actually be this close to p
+# use CLT to determine which sample sizes will be better
+```
+
+A poll of 25 ppl isn't very useful, for a close election. The margin of error is about 2 times the standard error which we estimated. 
+
+```{r}
+# prob of the std normal(0,1) being within 2 values from 0
+pnorm(2)-pnorm(-2) # ~ 95% that x.bar will be within two stderrs = moe
 ```
 
 
-## Section 2: Central Limit Theorem in Practice
+A Monte carlo Simulation for the CLT:
+
+But we can't run this because we don't know p. 
+```{r}
+# B <- 10000
+# N <- 1000
+# Xhat <- replicate(B, {
+#   X <- sample(c(0,1), size=N, replace=TRUE, prob=c(1-p, p))
+#   mean(X)
+# })
+```
+
+Set p to a certain value and simulate a poll of 1000 beads with:
+```{r}
+p <- 0.45
+N <- 1000
+
+X <- sample(c(0,1), size=N, replace=TRUE, prob=c(1-p, p))
+Xhat <- mean(X)
+
+B <- 10000
+Xhat <- replicate(B, {
+  X <- sample(c(0,1), size=N, replace=TRUE, prob=c(1-p, p))
+  mean(X)
+})
+
+mean(Xhat) # expected : 0.45
+sd(Xhat) # expected : 0.15
+
+par(mfrow=c(1,2))
+hist(Xhat)
+abline(v=0.45, col="red", lwd=2)
+qqnorm(Xhat)
+```
+
+So now to estimate the spread, not just p, we estimate $2\bar{X} - 1$ and the SE is multiplied by 2. 
+
+
+```{r}
+# Write a function called `take_sample` that takes `p` and `N` as arguements and returns the average value of a randomly sampled population.
+
+take_sample <- function(p,N) {
+  #sample N elements from a vector of options where Democrats are assigned the value '1' and     #Republicans are assigned the value '0'.
+  samp <- sample(c(0,1), N, replace=TRUE,prob=c(1-p, p))
+  mean(samp)
+}
+
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling
+set.seed(1)
+
+# Define `p` as the proportion of Democrats in the population being polled
+p <- 0.45
+
+# Define `N` as the number of people polled
+N <- 100
+
+# Call the `take_sample` function to determine the sample average of `N` randomly selected people from a population containing a proportion of Democrats equal to `p`. Print this value to the console.
+take_sample(p,N)
+
+```
 
 ## Section 3: Confidence Intervals and p-values 
 
