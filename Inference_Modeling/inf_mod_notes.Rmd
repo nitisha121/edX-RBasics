@@ -269,6 +269,80 @@ se_hat <- sqrt(X_hat*(1-X_hat)/N)
 
 ## Section 3: Confidence Intervals and p-values 
 
+Remember that a 95% CI means that p will be in the interval 95% of the time. So if we have 100 intervals (different bc they're dependent on a random variable), p will likely be in 95/100 intervals. Saying that p has a 95% chance of being between the lower lim and upper limit is incorrect, because p is a fixed value so it either is in that interval or it isn't. For any 100q% confidence interval, we use 1 - (1-q)/2 to multiply the upper and lower limit by. 
+
+To have about a 95% confidence interval, we go within 2 stdevs: `pnorm(2) - pnorm(-2)`. 
+For a 95% confidence interval, q = 0.95 so we use 0.975. 
+
+For a 99% confidence interval use 0.995:
+```{r}
+
+# value to multiply by 
+z <- qnorm(0.995)
+z
+
+# Look at symmetry
+pnorm(qnorm(0.995))
+
+# confirm  CI: 0.995 - 0.005
+# 1 - (1-q)/2 + (1-q)/2 = q
+pnorm(z) - pnorm(-z)
+
+# exact 95% CI gives 1.96 not 2 stdevs
+qnorm(0.975)
+```
+
+
+The null hypothesis is the skeptic's hypothesis. The p-value tells us how likely it is to see a value this large when the null hypothesis is true. 
+
+Let's try an example: we will use actual poll data from the 2016 US presedential election. Assume there are only two candidates and construct a 95% confidence interval for the election night proportion p. 
+```{r}
+# Load the data
+library(dslabs)
+data(polls_us_election_2016)
+
+# Generate an object `polls` that contains data filtered for polls that ended on or after October 31, 2016 in the United States
+polls <- polls_us_election_2016 %>% filter(enddate >= "2016-10-31" & state == "U.S.")
+
+# How many rows does `polls` contain? Print this value to the console.
+nrow(polls)
+
+# Assign the sample size of the first poll in `polls` to a variable called `N`. Print this value to the console.
+N <- polls$samplesize[1]
+N
+
+# For the first poll in `polls`, assign the estimated percentage of Clinton voters to a variable called `X_hat`. Print this value to the console.
+X_hat <- polls$rawpoll_clinton[1]/100
+X_hat
+
+# Calculate the standard error of `X_hat` and save it to a variable called `se_hat`. Print this value to the console.
+se_hat <- sqrt(X_hat*(1-X_hat)/N)
+se_hat 
+
+# Use `qnorm` to calculate the 95% confidence interval for the proportion of Clinton voters. Save the lower and then the upper confidence interval to a variable called `ci`.
+ci <- c(X_hat - qnorm(0.975)*se_hat, X_hat + qnorm(0.975)*se_hat)
+ci
+```
+
+
+```{r}
+# The `polls` object that filtered all the data by date and nation has already been loaded. Examine it using the `head` function.
+head(polls)
+
+# Create a new object called `pollster_results` that contains columns for pollster name, end date, X_hat, lower confidence interval,  se_hat, and upper confidence interval for each poll.
+polls <- polls  %>%  mutate(X_hat = rawpoll_clinton/100, se_hat = sqrt(X_hat*(1-X_hat)/samplesize), lower = X_hat - qnorm(0.975)*se_hat, upper = X_hat + qnorm(0.975)*se_hat)
+
+pollster_results <- select(polls, "pollster", "enddate", "X_hat", "se_hat", "lower", "upper")
+
+# total for popular votes was Clinton 48.2%
+
+# Add a logical variable called `hit` that indicates whether the actual value exists within the confidence interval of each poll. Summarize the average `hit` result to determine the proportion of polls with confidence intervals include the actual value. Save the result as an object called `avg_hit`.
+
+avg_hit <- pollster_results %>% mutate(hit = lower<=0.482 & upper>=0.482) %>% summarize(mean(hit))
+```
+
+
+
 ## Section 4: Statistical Models 
 
 ## Section 5:Bayesian Statistics
