@@ -1,0 +1,110 @@
+---
+title: 'Inf&Mod - edX prof: Rafael Izarry'
+author: "Nitisha Agarwal"
+date: "December 13, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Section 4: Statistical Models 
+
+Let's look at the heights data:
+```{r}
+# Load the 'dslabs' package and data contained in 'heights'
+library(dslabs)
+data(heights)
+
+# Make a vector of heights from all males in the population
+x <- heights %>% filter(sex == "Male") %>%
+  .$height
+
+# Calculate the population average. Print this value to the console.
+mean(x)
+
+# Calculate the population standard deviation. Print this value to the console.
+sd(x)
+
+# Define `N` as the number of people measured
+N <- 50
+
+# Define `X` as a random sample from our population `x`
+X <- sample(x, N, replace=TRUE)
+
+# Calculate the sample average. Print this value to the console.
+mean(X)
+
+# Calculate the sample standard deviation. Print this value to the console.
+sd(X)
+
+# Define `se` as the standard error of the estimate. Print this value to the console.
+
+se <- sd(X)/sqrt(N)
+se
+
+# Construct a 95% confidence interval for the population average based on our sample. Save the lower and then the upper confidence interval to a variable called `ci`.
+ci <- c(mean(X) - qnorm(0.975)*se, mean(X) + qnorm(0.975)*se)
+
+```
+
+What does the central limit theory tell us about the sample average and how it is related to $\mu$, the population average?
+It is a random variable with expected value $\mu$ and standard error $\frac{\sigma}{\sqrt{N}}$.
+
+
+Now run a Monte Carlo simulation in which you compute 10,000 confidence intervals as you have just done. What proportion of these intervals include $\mu$?
+```{r}
+# Define `mu` as the population average
+mu <- mean(x)
+
+# Use the `set.seed` function to make sure your answer matches the expected result after random sampling
+set.seed(1)
+
+# Define `N` as the number of people measured
+N <- 50
+
+# Define `B` as the number of times to run the model
+B <- 10000
+
+# Define an object `res` that contains a logical vector for simulated intervals that contain mu
+
+res <- replicate(B, {
+  X <- sample(x, N, replace=TRUE);
+  ci <- c(mean(X) - qnorm(0.975)*sd(X)/sqrt(N), 
+  mean(X) + qnorm(0.975)*sd(X)/sqrt(N))
+  between(mu, ci[1],ci[2]);
+  }
+)
+
+# Calculate the proportion of results in `res` that include mu. Print this value to the console.
+mean(res)
+```
+
+
+```{r}
+
+library(dslabs)
+library(dplyr)
+library(ggplot2)
+data("polls_us_election_2016")
+
+# These lines of code filter for the polls we want and calculate the spreads
+polls <- polls_us_election_2016 %>% 
+  filter(pollster %in% c("Rasmussen Reports/Pulse Opinion Research","The Times-Picayune/Lucid") &
+           enddate >= "2016-10-15" &
+           state == "U.S.") %>% 
+  mutate(spread = rawpoll_clinton/100 - rawpoll_trump/100) 
+
+# Make a boxplot with points of the spread for each pollster
+
+polls %>%
+  ggplot(aes(pollster, spread)) +
+  geom_boxplot(color="black", binwidth = .01) + geom_point()
+```
+
+## Section 5:Bayesian Statistics
+
+## Section 6: Election Forecasting 
+
+## Section 7: Automation Tests 
