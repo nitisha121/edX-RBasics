@@ -268,6 +268,4 @@ ps <- p_calc(taus)
 # Plot `taus` on the x-axis and `ps` on the y-axis
 plot(taus, ps)
 ```
-## Section 6: Election Forecasting 
-
-## Section 7: Automation Tests 
+## note to self: put sec 6, 7 in new file
